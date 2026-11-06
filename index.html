@@ -8,26 +8,55 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- html2canvas for Image Download -->
+    <!-- html2canvas for High Resolution PNG Download -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            background-color: #f1f5f9;
         }
 
-        /* Styling for Timetable Print */
+        /* Strict Border Table Setup to Prevent Missing Gridlines during Print & Canvas Render */
+        .timetable-container {
+            background-color: #ffffff;
+        }
+
+        .timetable-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+            border: 2px solid #0f172a;
+        }
+
+        .timetable-table th, 
+        .timetable-table td {
+            border-right: 1.5px solid #0f172a;
+            border-bottom: 1.5px solid #0f172a;
+            box-sizing: border-box;
+        }
+
+        .timetable-table th:last-child, 
+        .timetable-table td:last-child {
+            border-right: none;
+        }
+
+        .timetable-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Print Specific Customizations */
         @media print {
             @page {
                 size: A4 landscape;
-                margin: 5mm;
+                margin: 4mm;
             }
             body {
                 background: white !important;
                 color: black !important;
                 padding: 0 !important;
+                margin: 0 !important;
             }
             .no-print {
                 display: none !important;
@@ -40,166 +69,115 @@
                 max-width: 100% !important;
             }
             .timetable-table {
-                border-collapse: collapse !important;
-                width: 100% !important;
+                border: 2px solid #000000 !important;
             }
-            .timetable-table th, .timetable-table td {
-                border: 1.5px solid #000 !important;
+            .timetable-table th, 
+            .timetable-table td {
+                border-right: 1.5px solid #000000 !important;
+                border-bottom: 1.5px solid #000000 !important;
             }
         }
 
-        /* Timetable grid lines */
-        .timetable-table th, .timetable-table td {
-            border: 1.5px solid #1e293b;
-        }
-
-        .timetable-header-cell {
-            background-color: #ffffff;
-        }
-
-        /* Custom scrollbar for control panel */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: #f1f5f9;
         }
         ::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
         }
     </style>
 </head>
 <body class="min-h-screen text-slate-800 flex flex-col">
 
     <!-- Top Navigation Bar -->
-    <header class="no-print bg-slate-900 text-white shadow-md sticky top-0 z-40">
+    <header class="no-print bg-slate-900 text-white shadow-lg sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <div class="bg-indigo-600 p-2 rounded-lg text-white">
-                    <i class="fa-solid fa-calendar-days text-xl"></i>
+                <div class="bg-indigo-600 p-2.5 rounded-xl text-white shadow">
+                    <i class="fa-solid fa-table-cells text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg leading-tight">Penjana Jadual Waktu Persendirian</h1>
-                    <p class="text-xs text-slate-400">Versi Khas SK Tambak Jawa 2026</p>
+                    <h1 class="font-black text-lg tracking-tight leading-none">Penjana Jadual Waktu Persendirian</h1>
+                    <p class="text-xs text-slate-400 mt-0.5">Edisi Pintar SK Tambak Jawa 2026</p>
                 </div>
             </div>
 
             <div class="flex items-center space-x-2">
-                <button onclick="window.print()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition flex items-center space-x-2 shadow">
+                <button onclick="window.print()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow">
                     <i class="fa-solid fa-print"></i>
-                    <span class="hidden sm:inline">Cetak / Simpan PDF</span>
+                    <span>Cetak / Simpan PDF</span>
                 </button>
-                <button onclick="downloadAsImage()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition flex items-center space-x-2 shadow">
+                <button onclick="downloadAsHighResPNG()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow">
                     <i class="fa-solid fa-file-image"></i>
-                    <span class="hidden sm:inline">Muat Turun Gambar</span>
-                </button>
-                <button onclick="resetToDefault()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-sm font-medium transition" title="Set Semula Kebajikan Asal">
-                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Muat Turun Gambar (PNG)</span>
                 </button>
             </div>
         </div>
     </header>
 
     <!-- Main Container -->
-    <div class="flex-1 flex flex-col lg:flex-row max-w-7xl w-full mx-auto p-4 gap-6">
+    <div class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-5">
 
-        <!-- Sidebar / Control Panel (No Print) -->
-        <aside class="no-print w-full lg:w-80 flex-shrink-0 space-y-4">
-            
-            <!-- Information Card -->
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                <h2 class="font-bold text-slate-900 flex items-center gap-2 border-b pb-2 text-base">
-                    <i class="fa-solid fa-sliders text-indigo-600"></i> Tetapan Maklumat Jadual
-                </h2>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Tajuk Utama</label>
-                    <input type="text" id="input-title" class="w-full text-sm p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="updateHeaderInfo()" value="JADUAL WAKTU PERSENDIRIAN 2026">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Sekolah & Alamat</label>
-                    <input type="text" id="input-school" class="w-full text-sm p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="updateHeaderInfo()" value="SK TAMBAK JAWA, 45800 JERAM, SELANGOR">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Guru</label>
-                    <input type="text" id="input-teacher" class="w-full text-sm p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="updateHeaderInfo()" value="EN. MUHAMMAD NAZRUL IMAN BIN MAZLE">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Logo Sekolah (URL / Muat Naik)</label>
-                    <div class="flex gap-2">
-                        <input type="file" id="logo-upload" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
-                        <button onclick="document.getElementById('logo-upload').click()" class="w-full text-xs py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg border border-slate-300 flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-upload"></i> Muat Naik Logo
-                        </button>
-                    </div>
-                </div>
+        <!-- Top Action Bar (Matching User Image UI) -->
+        <div class="no-print bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Logo Upload Button -->
+                <input type="file" id="logo-upload" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
+                <button onclick="document.getElementById('logo-upload').click()" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 flex items-center gap-2 transition">
+                    <i class="fa-solid fa-upload"></i> Muat Naik Gambar / Logo
+                </button>
+                <button onclick="resetSchoolLogo()" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-lg border border-rose-200 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-xmark"></i> Buang Logo
+                </button>
+                <span class="text-xs text-slate-400 hidden lg:inline">| Logo muncul di kiri atas jadual dan cetakan.</span>
             </div>
 
-            <!-- Subject Color Legend / Styling -->
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center border-b pb-2">
-                    <h2 class="font-bold text-slate-900 flex items-center gap-2 text-base">
-                        <i class="fa-solid fa-palette text-indigo-600"></i> Senarai Subjek & Warna
-                    </h2>
-                    <button onclick="openSubjectModal()" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow">
-                        <i class="fa-solid fa-plus"></i> Subjek
-                    </button>
-                </div>
-                <p class="text-xs text-slate-500">Subjek tersimpan dengan warna pilihan automatik apabila dimasukkan dalam jadual.</p>
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Add Subject Button -->
+                <button onclick="openSubjectModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-lg shadow flex items-center gap-2 transition">
+                    <i class="fa-solid fa-plus-circle"></i> + Tambah Subjek Baharu
+                </button>
+
+                <!-- Reset Options -->
+                <button onclick="resetToDefaultSchedule()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-300 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-rotate-left"></i> Pulihkan jadual asal
+                </button>
+                <button onclick="clearEntireSchedule()" class="px-3 py-2 bg-white hover:bg-rose-50 text-rose-600 hover:text-rose-700 text-xs font-bold rounded-lg border border-rose-300 flex items-center gap-1.5 transition">
+                    Kosongkan jadual
+                </button>
+            </div>
+        </div>
+
+        <!-- Timetable Print / Render Box -->
+        <main class="w-full flex justify-center">
+            <div id="printable-area" class="print-area timetable-container bg-white p-6 sm:p-8 rounded-2xl shadow-md border border-slate-200 w-full overflow-x-auto">
                 
-                <!-- Dynamic Subject List Container -->
-                <div id="subject-list-container" class="grid grid-cols-2 gap-2 text-xs max-h-48 overflow-y-auto pr-1">
-                    <!-- Dynamic subjects rendered here -->
-                </div>
-            </div>
-
-            <!-- Helpful Hints -->
-            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-indigo-900 text-xs space-y-2">
-                <p class="font-semibold flex items-center gap-1.5"><i class="fa-solid fa-lightbulb text-amber-500 text-sm"></i> Panduan Penggunaan:</p>
-                <ul class="list-disc list-inside space-y-1 text-indigo-800">
-                    <li>Klik sel untuk **tukar subjek, kelas, atau warna**.</li>
-                    <li>Gunakan **Merge Right** untuk menggabungkan masa subjek 1 jam atau 1.5 jam.</li>
-                    <li>Susunan susun atur dioptimumkan tepat mengikut jadual fizikal asal SK Tambak Jawa 2026.</li>
-                </ul>
-            </div>
-        </aside>
-
-        <!-- Timetable Render View -->
-        <main class="flex-1 flex flex-col items-center">
-            
-            <div id="printable-area" class="print-area bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200 w-full overflow-x-auto">
-                
-                <!-- Header Banner -->
-                <div class="relative flex items-center justify-between border-b-2 border-slate-900 pb-3 mb-3">
-                    
-                    <!-- Left: Logo & School Info -->
+                <!-- Timetable Header Banner -->
+                <div class="flex items-center justify-between border-b-2 border-slate-900 pb-4 mb-4 gap-4">
+                    <!-- Left Logo & Info -->
                     <div class="flex items-center space-x-4">
                         <div class="w-16 h-20 flex-shrink-0 flex items-center justify-center">
-                            <!-- SVG Replica of SK Tambak Jawa Crest / Custom Uploaded Logo -->
-                            <img id="school-logo-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'><path d='M50 5 L90 25 L90 75 L50 115 L10 75 L10 25 Z' fill='%23e11d48' stroke='%23fbbf24' stroke-width='4'/><path d='M25 40 L75 40 L75 80 L25 80 Z' fill='%23fbbf24'/><path d='M35 50 L65 50 L50 75 Z' fill='%230284c7'/><circle cx='50' cy='30' r='8' fill='%23facc15'/><text x='50' y='105' font-size='10' font-weight='bold' text-anchor='middle' fill='%23ffffff'>ILMU SULUH KEMAJUAN</text></svg>" alt="Logo Sekolah" class="max-h-full max-w-full object-contain">
+                            <img id="school-logo-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'><path d='M50 5 L90 25 L90 75 L50 115 L10 75 L10 25 Z' fill='%23e11d48' stroke='%23fbbf24' stroke-width='4'/><path d='M25 40 L75 40 L75 80 L25 80 Z' fill='%23fbbf24'/><path d='M35 50 L65 50 L50 75 Z' fill='%230284c7'/><circle cx='50' cy='30' r='8' fill='%23facc15'/><text x='50' y='105' font-size='9' font-weight='bold' text-anchor='middle' fill='%23ffffff'>ILMU SULUH KEMAJUAN</text></svg>" alt="Logo Sekolah" class="max-h-full max-w-full object-contain">
                         </div>
                         <div>
-                            <h1 id="display-title" class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 leading-none uppercase">
+                            <h1 id="display-title" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none uppercase">
                                 JADUAL WAKTU PERSENDIRIAN 2026
                             </h1>
                             <h2 id="display-school" class="text-2xl sm:text-3xl font-extrabold text-indigo-950 tracking-tight leading-tight uppercase mt-1">
                                 SK TAMBAK JAWA
                             </h2>
-                            <p id="display-address" class="text-xs font-semibold text-slate-600 uppercase">
+                            <p id="display-address" class="text-xs font-semibold text-slate-600 uppercase mt-0.5">
                                 SK Tambak Jawa, 45800 Jeram, Selangor
                             </p>
                         </div>
                     </div>
 
-                    <!-- Right: Teacher Name -->
+                    <!-- Right Teacher Info -->
                     <div class="text-right flex flex-col justify-end">
                         <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">NAMA GURU :</span>
                         <span id="display-teacher" class="text-sm sm:text-base font-extrabold text-slate-900 uppercase tracking-wide">
@@ -208,89 +186,49 @@
                     </div>
                 </div>
 
-                <!-- Timetable Main Table -->
+                <!-- Main Timetable Grid -->
                 <div class="overflow-x-auto">
-                    <table id="timetable" class="timetable-table w-full text-center border-collapse">
-                        <!-- Table Header (Time Slots) -->
+                    <table id="timetable" class="timetable-table w-full text-center">
                         <thead>
-                            <tr class="bg-slate-100 text-slate-900 text-xs font-bold">
-                                <th class="w-16 py-2 px-1 bg-slate-50">Hari</th>
-                                <!-- Slot 1 -->
-                                <th class="py-1 px-1 min-w-[70px]">
-                                    <span class="text-[10px] text-slate-500 font-semibold block">1</span>
-                                    7:30<br>8:00
-                                </th>
-                                <!-- Slot 2 -->
-                                <th class="py-1 px-1 min-w-[70px]">
-                                    <span class="text-[10px] text-slate-500 font-semibold block">2</span>
-                                    8:00<br>8:30
-                                </th>
-                                <!-- Slot 3 -->
-                                <th class="py-1 px-1 min-w-[70px]">
-                                    <span class="text-[10px] text-slate-500 font-semibold block">3</span>
-                                    8:30<br>9:00
-                                </th>
-                                <!-- Slot 4 -->
-                                <th class="py-1 px-1 min-w-[70px]">
-                                    <span class="text-[10px] text-slate-500 font-semibold block">4</span>
-                                    9:00<br>9:30
-                                </th>
-                                <!-- Slot 5 -->
-                                <th class="py-1 px-1 min-w-[70px]">
-                                    <span class="text-[10px] text-slate-500 font-semibold block">5</span>
-                                    9:30<br>10:00
-                                </th>
-                                <!-- Slot 6 -->
-                                <th class="py-1 px-1 min-w-[70px]">
-                                    <span class="text-[10px] text-slate-500 font-semibold block">6</span>
-                                    10:00<br>10:30
-                                </th>
-                                <!-- Slot 7 -->
-                                <th class="py-1 px-1 min-w-[70px]">
-                                    <span class="text-[10px] text-slate-500 font-semibold block">7</span>
-                                    10:30<br>11:00
-                                </th>
-                                <!-- Slot 8 -->
-                                <th class="py-1 px-1 min-w-[70px]">
-                                    <span class="text-[10px] text-slate-500 font-semibold block">8</span>
-                                    11:00<br>11:30
-                                </th>
-                                <!-- Slot 9 -->
-                                <th class="py-1 px-1 min-w-[70px]">
-                                    <span class="text-[10px] text-slate-500 font-semibold block">9</span>
-                                    11:30<br>12:00
-                                </th>
-                                <!-- Slot 10 -->
-                                <th class="py-1 px-1 min-w-[70px]">
-                                    <span class="text-[10px] text-slate-500 font-semibold block">10</span>
-                                    12:00<br>12:30
-                                </th>
-                                <!-- Slot 11 -->
-                                <th class="py-1 px-1 min-w-[70px]">
-                                    <span class="text-[10px] text-slate-500 font-semibold block">11</span>
-                                    12:30<br>1:00
-                                </th>
+                            <tr class="bg-slate-100 text-slate-900 text-xs font-extrabold">
+                                <th class="w-24 py-3 px-2 bg-slate-200 uppercase tracking-wider text-slate-800">Hari / Masa</th>
+                                <th class="py-2 px-1 min-w-[75px]"><span class="text-[10px] text-slate-500 block font-normal">1</span>7:30<br>–<br>8:00</th>
+                                <th class="py-2 px-1 min-w-[75px]"><span class="text-[10px] text-slate-500 block font-normal">2</span>8:00<br>–<br>8:30</th>
+                                <th class="py-2 px-1 min-w-[75px]"><span class="text-[10px] text-slate-500 block font-normal">3</span>8:30<br>–<br>9:00</th>
+                                <th class="py-2 px-1 min-w-[75px]"><span class="text-[10px] text-slate-500 block font-normal">4</span>9:00<br>–<br>9:30</th>
+                                <th class="py-2 px-1 min-w-[75px]"><span class="text-[10px] text-slate-500 block font-normal">5</span>9:30<br>–<br>10:00</th>
+                                <th class="py-2 px-1 min-w-[75px]"><span class="text-[10px] text-slate-500 block font-normal">6</span>10:00<br>–<br>10:30</th>
+                                <th class="py-2 px-1 min-w-[75px]"><span class="text-[10px] text-slate-500 block font-normal">7</span>10:30<br>–<br>11:00</th>
+                                <th class="py-2 px-1 min-w-[75px]"><span class="text-[10px] text-slate-500 block font-normal">8</span>11:00<br>–<br>11:30</th>
+                                <th class="py-2 px-1 min-w-[75px]"><span class="text-[10px] text-slate-500 block font-normal">9</span>11:30<br>–<br>12:00</th>
+                                <th class="py-2 px-1 min-w-[75px]"><span class="text-[10px] text-slate-500 block font-normal">10</span>12:00<br>–<br>12:30</th>
+                                <th class="py-2 px-1 min-w-[75px]"><span class="text-[10px] text-slate-500 block font-normal">11</span>12:30<br>–<br>1:00</th>
                             </tr>
                         </thead>
-                        <tbody id="timetable-body" class="divide-y divide-slate-800 text-slate-900 font-bold">
-                            <!-- Dynamic Content Rendered Via JavaScript -->
+                        <tbody id="timetable-body" class="font-bold text-slate-900 bg-white">
+                            <!-- Dynamic Content Rendered via JavaScript -->
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Footer Info -->
-                <div class="flex justify-between items-center text-[10px] font-semibold text-slate-500 mt-2 pt-1 border-t border-slate-200">
-                    <span>JADUAL KELAS</span>
+                <!-- Footer (Left Side Left Completely Blank as requested) -->
+                <div class="flex justify-between items-center text-[10px] font-semibold text-slate-400 mt-2 pt-1 border-t border-slate-100">
+                    <span></span> <!-- BLANK CORNER -->
                     <span>aSc Jadual Waktu</span>
                 </div>
-            </div>
 
+                <!-- Subject Legend Bar (Matching User Reference Image) -->
+                <div id="subject-legend-container" class="mt-4 pt-3 border-t border-slate-200 flex flex-wrap gap-2 text-xs font-semibold text-slate-800">
+                    <!-- Dynamic subject tags rendered here -->
+                </div>
+
+            </div>
         </main>
     </div>
 
-    <!-- Cell Edit Modal -->
+    <!-- Edit Slot Modal -->
     <div id="edit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 animate-in fade-in zoom-in duration-150">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 animate-in fade-in zoom-in duration-150">
             <div class="flex justify-between items-center border-b pb-3">
                 <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
                     <i class="fa-solid fa-pen-to-square text-indigo-600"></i> Sunting Petak Jadual
@@ -304,33 +242,33 @@
                 <input type="hidden" id="edit-day-idx">
                 <input type="hidden" id="edit-slot-idx">
 
-                <!-- Quick Subject Selection Dropdown -->
+                <!-- Quick Subject Selector -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Subjek Pantas</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Subjek Pantas</label>
                     <select id="edit-quick-subject" onchange="onQuickSubjectSelect(this.value)" class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-indigo-50/50 font-semibold text-indigo-900">
-                        <!-- Populated dynamically -->
+                        <!-- Options dynamically populated -->
                     </select>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Subjek / Kod</label>
-                        <input type="text" id="edit-subject" class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="cth: BM, RBT">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nama Subjek / Kod</label>
+                        <input type="text" id="edit-subject" class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="cth: BM, PJ, SEJ">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Kelas</label>
-                        <input type="text" id="edit-class" class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="cth: 1 JAYA, 3 MAJU">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nama Kelas</label>
+                        <input type="text" id="edit-class" class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="cth: 1 JAYA, 6 MAJU">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nota Guru / Catatan Sel</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Nama Guru / Catatan</label>
                     <input type="text" id="edit-teacher-note" class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="cth: EN. NAZRUL">
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Span Slot (Tempoh Masa)</label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tempoh Slot (Colspan)</label>
                         <select id="edit-colspan" class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                             <option value="1">1 Slot (30 Minit)</option>
                             <option value="2">2 Slot (1 Jam)</option>
@@ -340,22 +278,19 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Warna Latar Sel</label>
-                        <div class="flex items-center gap-2">
-                            <input type="color" id="edit-color" class="h-10 w-12 p-1 border border-slate-300 rounded-lg cursor-pointer">
-                            <button type="button" onclick="clearColor()" class="text-xs text-slate-500 underline hover:text-slate-800">Biasa</button>
-                        </div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Warna Kad Sel</label>
+                        <input type="color" id="edit-color" class="h-10 w-full p-1 border border-slate-300 rounded-lg cursor-pointer">
                     </div>
                 </div>
 
                 <div class="pt-3 flex gap-2 justify-end border-t mt-4">
-                    <button type="button" onclick="clearCell()" class="px-4 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 font-semibold rounded-lg text-sm mr-auto transition">
+                    <button type="button" onclick="clearCell()" class="px-4 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold rounded-lg text-sm mr-auto transition">
                         <i class="fa-solid fa-trash-can mr-1"></i> Kosongkan
                     </button>
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold rounded-lg text-sm transition">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold rounded-lg text-sm transition">
                         Batal
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm shadow transition">
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-sm shadow transition">
                         Simpan
                     </button>
                 </div>
@@ -363,9 +298,9 @@
         </div>
     </div>
 
-    <!-- Add & Manage Subjects Modal -->
+    <!-- Manage / Add Subject Modal -->
     <div id="subject-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 animate-in fade-in zoom-in duration-150">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 animate-in fade-in zoom-in duration-150">
             <div class="flex justify-between items-center border-b pb-3">
                 <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
                     <i class="fa-solid fa-book text-indigo-600"></i> Urus & Tambah Subjek Baharu
@@ -376,31 +311,26 @@
             </div>
 
             <form id="add-subject-form" onsubmit="saveSubject(event)" class="space-y-3">
-                <input type="hidden" id="subject-edit-id" value="">
-                
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Singkatan / Kod Subjek (cth: RBT, MZ, BI)</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Singkatan / Kod Subjek (cth: RBT, MZ, BI)</label>
                     <input type="text" id="subject-code" required class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none uppercase" placeholder="Masukkan Singkatan">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Penuh Subjek (cth: Reka Bentuk & Teknologi)</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Nama Penuh Subjek (cth: Reka Bentuk & Teknologi)</label>
                     <input type="text" id="subject-fullname" required class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Masukkan Nama Penuh">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Warna Tema Subjek</label>
-                    <div class="flex items-center gap-3">
-                        <input type="color" id="subject-color" value="#3b82f6" class="h-10 w-16 p-1 border border-slate-300 rounded-lg cursor-pointer">
-                        <span class="text-xs text-slate-500">Warna ini akan digunakan secara automatik apabila subjek dipilih.</span>
-                    </div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Warna Tema Subjek</label>
+                    <input type="color" id="subject-color" value="#dbeafe" class="h-10 w-full p-1 border border-slate-300 rounded-lg cursor-pointer">
                 </div>
 
                 <div class="pt-3 flex gap-2 justify-end border-t mt-4">
-                    <button type="button" onclick="closeSubjectModal()" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold rounded-lg text-sm transition">
+                    <button type="button" onclick="closeSubjectModal()" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold rounded-lg text-sm transition">
                         Batal
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm shadow transition flex items-center gap-1.5">
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-sm shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-plus-circle"></i> Simpan Subjek
                     </button>
                 </div>
@@ -408,75 +338,77 @@
         </div>
     </div>
 
-    <!-- JavaScript Logic -->
+    <!-- Core Logic JavaScript -->
     <script>
-        // Exact Default Schedule Data based on Image
         const DAYS = ['Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat'];
-        const SHORT_DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr'];
         const TOTAL_SLOTS = 11;
-
-        // Default Master Subject List
-        const defaultSubjects = [
-            { id: 'BM', code: 'BM', name: 'Bahasa Melayu', color: '#fef3c7' },   // Light amber
-            { id: 'SEJ', code: 'SEJ', name: 'Sejarah', color: '#e0f2fe' },       // Light sky
-            { id: 'PJ', code: 'PJ', name: 'Pendidikan Jasmani', color: '#d1fae5' }, // Light emerald
-            { id: 'PK', code: 'PK', name: 'Pendidikan Kesihatan', color: '#d1fae5' },
-            { id: 'P', code: 'P', name: 'Perhimpunan', color: '#f3e8ff' }        // Light purple
+        const TIME_LABELS = [
+            '07:30–08:00', '08:00–08:30', '08:30–09:00', '09:00–09:30',
+            '09:30–10:00', '10:00–10:30', '10:30–11:00', '11:00–11:30',
+            '11:30–12:00', '12:00–12:30', '12:30–13:00'
         ];
 
-        // Master Subject List (Loaded from local storage or defaults)
+        // Master Subjects List
+        const defaultSubjects = [
+            { id: 'BM', code: 'BM', name: 'Bahasa Melayu', color: '#dbeafe' },    // Light Blue
+            { id: 'SEJ', code: 'SEJ', name: 'Sejarah', color: '#f3e8ff' },        // Light Purple
+            { id: 'PJ', code: 'PJ', name: 'Pendidikan Jasmani', color: '#dcfce7' },// Light Green
+            { id: 'PK', code: 'PK', name: 'Pendidikan Kesihatan', color: '#fef9c3' },// Light Yellow
+            { id: 'P', code: 'P', name: 'Perhimpunan', color: '#f1f5f9' }          // Light Gray
+        ];
+
         let subjectsList = JSON.parse(localStorage.getItem('sk_subjects')) || defaultSubjects;
 
-        // Default timetable matrix preloaded with SK Tambak Jawa image data
+        // Preloaded Schedule Exact to SK Tambak Jawa 2026 Image
         const initialSchedule = [
             // Isnin (Mo)
             [
-                { class: '', subject: 'P', teacher: '', colspan: 1, bg: '#f3e8ff' },
-                { class: '1 JAYA', subject: 'BM', teacher: '', colspan: 2, bg: '#fef3c7' },
+                { class: '', subject: 'P', teacher: '', colspan: 1, bg: '#f1f5f9' },
+                { class: '1 JAYA', subject: 'BM', teacher: '', colspan: 2, bg: '#dbeafe' },
                 null,
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
-                { class: '5 MAJU', subject: 'SEJ', teacher: 'EN. NAZRUL', colspan: 2, bg: '#e0f2fe' },
+                { class: '5 MAJU', subject: 'SEJ', teacher: 'EN. NAZRUL', colspan: 2, bg: '#f3e8ff' },
                 null,
-                { class: '2 MAJU', subject: 'BM', teacher: 'EN. NAZRUL', colspan: 2, bg: '#fef3c7' },
+                { class: '2 MAJU', subject: 'BM', teacher: 'EN. NAZRUL', colspan: 2, bg: '#dbeafe' },
                 null
             ],
             // Selasa (Tu)
             [
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
-                { class: '6 JAYA', subject: 'PJ', teacher: '', colspan: 1, bg: '#d1fae5' },
-                { class: '6 MAJU', subject: 'SEJ', teacher: 'EN. NAZRUL', colspan: 2, bg: '#e0f2fe' },
+                { class: '6 JAYA', subject: 'PJ', teacher: '', colspan: 1, bg: '#dcfce7' },
+                { class: '6 MAJU', subject: 'SEJ', teacher: 'EN. NAZRUL', colspan: 2, bg: '#f3e8ff' },
                 null,
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
-                { class: '2 MAJU', subject: 'BM', teacher: '', colspan: 2, bg: '#fef3c7' },
+                { class: '2 MAJU', subject: 'BM', teacher: '', colspan: 3, bg: '#dbeafe' },
                 null,
-                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                null,
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' }
             ],
             // Rabu (We)
             [
-                { class: '6 JAYA', subject: 'PJ', teacher: '', colspan: 1, bg: '#d1fae5' },
+                { class: '6 JAYA', subject: 'PJ', teacher: '', colspan: 1, bg: '#dcfce7' },
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
-                { class: '1 JAYA', subject: 'BM', teacher: 'EN. NAZRUL', colspan: 2, bg: '#fef3c7' },
+                { class: '1 JAYA', subject: 'BM', teacher: 'EN. NAZRUL', colspan: 2, bg: '#dbeafe' },
                 null,
-                { class: '2 MAJU', subject: 'BM', teacher: 'EN. NAZRUL', colspan: 2, bg: '#fef3c7' },
+                { class: '2 MAJU', subject: 'BM', teacher: 'EN. NAZRUL', colspan: 2, bg: '#dbeafe' },
                 null,
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' }
             ],
             // Khamis (Th)
             [
-                { class: '1 JAYA', subject: 'BM', teacher: '', colspan: 2, bg: '#fef3c7' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '1 JAYA', subject: 'BM', teacher: '', colspan: 3, bg: '#dbeafe' },
                 null,
-                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
-                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                null,
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
@@ -487,134 +419,57 @@
             ],
             // Jumaat (Fr)
             [
-                { class: '6 JAYA', subject: 'PK', teacher: '', colspan: 1, bg: '#d1fae5' },
-                { class: '1 JAYA', subject: 'BM', teacher: 'EN. NAZRUL', colspan: 2, bg: '#fef3c7' },
+                { class: '6 JAYA', subject: 'PK', teacher: '', colspan: 1, bg: '#fef9c3' },
+                { class: '1 JAYA', subject: 'BM', teacher: 'EN. NAZRUL', colspan: 2, bg: '#dbeafe' },
                 null,
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
-                { class: '2 MAJU', subject: 'BM', teacher: '', colspan: 2, bg: '#fef3c7' },
+                { class: '2 MAJU', subject: 'BM', teacher: '', colspan: 3, bg: '#dbeafe' },
                 null,
-                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                null,
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
                 { class: '', subject: '', teacher: '', colspan: 1, bg: '' }
             ]
         ];
 
-        // Active State Schedule (Loaded from local storage or defaults)
         let timetableData = JSON.parse(localStorage.getItem('sk_timetable_data')) || JSON.parse(JSON.stringify(initialSchedule));
 
-        // Save State to LocalStorage
         function saveDataToStorage() {
             localStorage.setItem('sk_subjects', JSON.stringify(subjectsList));
             localStorage.setItem('sk_timetable_data', JSON.stringify(timetableData));
         }
 
-        // Render Subject List Legend Panel
-        function renderSubjectList() {
-            const container = document.getElementById('subject-list-container');
+        // Render Subject Legend Under Timetable
+        function renderSubjectLegend() {
+            const container = document.getElementById('subject-legend-container');
             container.innerHTML = '';
 
-            subjectsList.forEach((sub) => {
-                const item = document.createElement('div');
-                item.className = "flex items-center justify-between p-2 rounded border text-xs font-semibold shadow-sm transition hover:shadow";
-                item.style.backgroundColor = sub.color;
-
-                item.innerHTML = `
-                    <div class="flex items-center gap-2 overflow-hidden">
-                        <span class="w-2.5 h-2.5 rounded-full border border-slate-400 flex-shrink-0" style="background-color: ${sub.color}"></span>
-                        <span class="truncate text-slate-900" title="${sub.name}">${sub.code}</span>
-                    </div>
-                    <button onclick="deleteSubject('${sub.id}')" class="text-slate-400 hover:text-rose-600 p-0.5" title="Padam Subjek">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        // Open & Close Subject Manager Modal
-        function openSubjectModal() {
-            document.getElementById('subject-code').value = '';
-            document.getElementById('subject-fullname').value = '';
-            document.getElementById('subject-color').value = '#3b82f6';
-            document.getElementById('subject-modal').classList.remove('hidden');
-        }
-
-        function closeSubjectModal() {
-            document.getElementById('subject-modal').classList.add('hidden');
-        }
-
-        // Save New Custom Subject
-        function saveSubject(e) {
-            e.preventDefault();
-            const code = document.getElementById('subject-code').value.trim().toUpperCase();
-            const fullname = document.getElementById('subject-fullname').value.trim();
-            const color = document.getElementById('subject-color').value;
-
-            if (!code) return;
-
-            // Check if exists
-            const existingIndex = subjectsList.findIndex(s => s.code === code);
-            if (existingIndex >= 0) {
-                subjectsList[existingIndex] = { id: code, code, name: fullname, color };
-            } else {
-                subjectsList.push({ id: code, code, name: fullname, color });
-            }
-
-            saveDataToStorage();
-            renderSubjectList();
-            closeSubjectModal();
-        }
-
-        // Delete Subject
-        function deleteSubject(subjectId) {
-            if (confirm(`Adakah anda pasti mahu memadam subjek ini?`)) {
-                subjectsList = subjectsList.filter(s => s.id !== subjectId);
-                saveDataToStorage();
-                renderSubjectList();
-            }
-        }
-
-        // Populate Subject Quick Dropdown in Cell Edit Modal
-        function populateQuickSubjectDropdown(selectedCode) {
-            const select = document.getElementById('edit-quick-subject');
-            select.innerHTML = '<option value="">-- Pilih Daripada Senarai Subjek --</option>';
-
             subjectsList.forEach(sub => {
-                const opt = document.createElement('option');
-                opt.value = sub.code;
-                opt.innerText = `${sub.code} - ${sub.name}`;
-                if (sub.code === selectedCode) {
-                    opt.selected = true;
-                }
-                select.appendChild(opt);
+                const tag = document.createElement('div');
+                tag.className = "px-3 py-1.5 rounded-lg border border-slate-300 flex items-center gap-2 shadow-sm";
+                tag.style.backgroundColor = sub.color;
+                tag.innerHTML = `
+                    <span class="font-extrabold text-slate-900">${sub.code}</span>
+                    <span class="text-slate-600 font-medium">• ${sub.name}</span>
+                `;
+                container.appendChild(tag);
             });
         }
 
-        // Auto Fill Subject Code and Color when Quick Dropdown changes
-        function onQuickSubjectSelect(code) {
-            if (!code) return;
-            const sub = subjectsList.find(s => s.code === code);
-            if (sub) {
-                document.getElementById('edit-subject').value = sub.code;
-                document.getElementById('edit-color').value = sub.color;
-            }
-        }
-
-        // Render Table Function
+        // Render Timetable Grid (Matching UI Cards)
         function renderTimetable() {
             const tbody = document.getElementById('timetable-body');
             tbody.innerHTML = '';
 
-            SHORT_DAYS.forEach((dayLabel, dayIdx) => {
+            DAYS.forEach((dayName, dayIdx) => {
                 const tr = document.createElement('tr');
-                tr.className = "h-16";
+                tr.className = "h-20";
 
-                // Day Label Header Cell
+                // Day Column Header
                 const tdDay = document.createElement('td');
-                tdDay.className = "bg-slate-100 text-base font-extrabold text-slate-800 tracking-wide";
-                tdDay.innerText = dayLabel;
+                tdDay.className = "bg-slate-900 text-white font-extrabold text-sm sm:text-base tracking-wide align-middle px-2";
+                tdDay.innerText = dayName;
                 tr.appendChild(tdDay);
 
                 let slotIdx = 0;
@@ -628,40 +483,53 @@
 
                     const td = document.createElement('td');
                     td.colSpan = cellData.colspan || 1;
-                    td.className = "p-1 relative cursor-pointer hover:bg-indigo-50/50 transition-colors select-none group align-middle";
+                    td.className = "p-1.5 align-middle";
 
-                    if (cellData.bg) {
-                        td.style.backgroundColor = cellData.bg;
-                    }
-
-                    // Content Container inside Cell
-                    const wrapper = document.createElement('div');
-                    wrapper.className = "flex flex-col justify-between h-full min-h-[56px] w-full text-center px-1 py-0.5";
-
-                    // Top: Class Name
-                    const classDiv = document.createElement('div');
-                    classDiv.className = "text-[11px] font-semibold text-slate-700 tracking-tight text-left leading-none";
-                    classDiv.innerText = cellData.class || '';
-
-                    // Middle: Subject (Large Bold Text)
-                    const subjectDiv = document.createElement('div');
-                    subjectDiv.className = "text-xl sm:text-2xl font-black text-slate-900 tracking-normal my-auto leading-none";
-                    subjectDiv.innerText = cellData.subject || '';
-
-                    // Bottom: Teacher Note
-                    const teacherDiv = document.createElement('div');
-                    teacherDiv.className = "text-[9px] font-bold text-slate-600 tracking-tighter text-right uppercase leading-none";
-                    teacherDiv.innerText = cellData.teacher || '';
-
-                    wrapper.appendChild(classDiv);
-                    wrapper.appendChild(subjectDiv);
-                    wrapper.appendChild(teacherDiv);
-                    td.appendChild(wrapper);
-
-                    // Add click listener to edit cell
                     const currentDay = dayIdx;
                     const currentSlot = slotIdx;
-                    td.onclick = () => openModal(currentDay, currentSlot);
+
+                    if (cellData.subject || cellData.class) {
+                        // FILLED SLOT - Card Styling
+                        const card = document.createElement('div');
+                        card.className = "w-full h-full min-h-[68px] rounded-xl p-2 flex flex-col justify-between relative shadow-sm border border-slate-300/60 cursor-pointer hover:shadow-md transition group";
+                        
+                        if (cellData.bg) {
+                            card.style.backgroundColor = cellData.bg;
+                        } else {
+                            card.style.backgroundColor = '#e2e8f0';
+                        }
+
+                        // Start Time - End Time Calculation
+                        const endSlotIdx = currentSlot + (cellData.colspan || 1) - 1;
+                        const startTime = TIME_LABELS[currentSlot].split('–')[0];
+                        const endTime = TIME_LABELS[endSlotIdx].split('–')[1];
+                        const timeRangeText = `${startTime}–${endTime}`;
+
+                        card.innerHTML = `
+                            <div class="flex justify-between items-start leading-none">
+                                <span class="text-[11px] font-extrabold text-slate-700 tracking-tight">${cellData.class || ''}</span>
+                                <i class="fa-solid fa-pencil text-[10px] text-slate-400 group-hover:text-slate-700 transition"></i>
+                            </div>
+                            <div class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight my-1 text-center leading-none">
+                                ${cellData.subject || ''}
+                            </div>
+                            <div class="flex justify-between items-end leading-none text-[9px] font-bold text-slate-500">
+                                <span>${timeRangeText}</span>
+                                <span class="uppercase tracking-tighter">${cellData.teacher || ''}</span>
+                            </div>
+                        `;
+
+                        card.onclick = () => openModal(currentDay, currentSlot);
+                        td.appendChild(card);
+
+                    } else {
+                        // EMPTY SLOT - Add Card with "+"
+                        const emptyCard = document.createElement('div');
+                        emptyCard.className = "w-full h-full min-h-[68px] rounded-xl bg-slate-50 border border-dashed border-slate-300 flex items-center justify-center cursor-pointer hover:bg-indigo-50 hover:border-indigo-300 transition text-slate-400 hover:text-indigo-600";
+                        emptyCard.innerHTML = `<i class="fa-solid fa-plus text-base"></i>`;
+                        emptyCard.onclick = () => openModal(currentDay, currentSlot);
+                        td.appendChild(emptyCard);
+                    }
 
                     tr.appendChild(td);
                     slotIdx += (cellData.colspan || 1);
@@ -671,39 +539,7 @@
             });
         }
 
-        // Header Editing Sync
-        function updateHeaderInfo() {
-            const titleVal = document.getElementById('input-title').value;
-            const schoolVal = document.getElementById('input-school').value;
-            const teacherVal = document.getElementById('input-teacher').value;
-
-            document.getElementById('display-title').innerText = titleVal || 'JADUAL WAKTU PERSENDIRIAN 2026';
-            
-            if (schoolVal.includes(',')) {
-                const parts = schoolVal.split(',');
-                document.getElementById('display-school').innerText = parts[0].trim();
-                document.getElementById('display-address').innerText = schoolVal.trim();
-            } else {
-                document.getElementById('display-school').innerText = schoolVal || 'SK TAMBAK JAWA';
-                document.getElementById('display-address').innerText = schoolVal;
-            }
-
-            document.getElementById('display-teacher').innerText = teacherVal || 'EN. MUHAMMAD NAZRUL IMAN BIN MAZLE';
-        }
-
-        // Logo Upload Handler
-        function handleLogoUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('school-logo-img').src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // Modal Functions
+        // Modal Controls
         function openModal(dayIdx, slotIdx) {
             const cell = timetableData[dayIdx][slotIdx];
             if (!cell) return;
@@ -714,7 +550,7 @@
             document.getElementById('edit-subject').value = cell.subject || '';
             document.getElementById('edit-teacher-note').value = cell.teacher || '';
             document.getElementById('edit-colspan').value = cell.colspan || 1;
-            document.getElementById('edit-color').value = cell.bg || '#ffffff';
+            document.getElementById('edit-color').value = cell.bg || '#dbeafe';
 
             populateQuickSubjectDropdown(cell.subject || '');
             document.getElementById('edit-modal').classList.remove('hidden');
@@ -724,23 +560,57 @@
             document.getElementById('edit-modal').classList.add('hidden');
         }
 
-        function clearColor() {
-            document.getElementById('edit-color').value = '#ffffff';
+        function openSubjectModal() {
+            document.getElementById('subject-code').value = '';
+            document.getElementById('subject-fullname').value = '';
+            document.getElementById('subject-color').value = '#dbeafe';
+            document.getElementById('subject-modal').classList.remove('hidden');
         }
 
-        function clearCell() {
-            const dayIdx = parseInt(document.getElementById('edit-day-idx').value);
-            const slotIdx = parseInt(document.getElementById('edit-slot-idx').value);
+        function closeSubjectModal() {
+            document.getElementById('subject-modal').classList.add('hidden');
+        }
 
-            const oldColspan = timetableData[dayIdx][slotIdx].colspan || 1;
-            
-            for (let i = 0; i < oldColspan; i++) {
-                timetableData[dayIdx][slotIdx + i] = { class: '', subject: '', teacher: '', colspan: 1, bg: '' };
+        function populateQuickSubjectDropdown(selectedCode) {
+            const select = document.getElementById('edit-quick-subject');
+            select.innerHTML = '<option value="">-- Pilih Daripada Senarai Subjek --</option>';
+
+            subjectsList.forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub.code;
+                opt.innerText = `${sub.code} - ${sub.name}`;
+                if (sub.code === selectedCode) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function onQuickSubjectSelect(code) {
+            if (!code) return;
+            const sub = subjectsList.find(s => s.code === code);
+            if (sub) {
+                document.getElementById('edit-subject').value = sub.code;
+                document.getElementById('edit-color').value = sub.color;
+            }
+        }
+
+        function saveSubject(e) {
+            e.preventDefault();
+            const code = document.getElementById('subject-code').value.trim().toUpperCase();
+            const fullname = document.getElementById('subject-fullname').value.trim();
+            const color = document.getElementById('subject-color').value;
+
+            if (!code) return;
+
+            const existingIndex = subjectsList.findIndex(s => s.code === code);
+            if (existingIndex >= 0) {
+                subjectsList[existingIndex] = { id: code, code, name: fullname, color };
+            } else {
+                subjectsList.push({ id: code, code, name: fullname, color });
             }
 
             saveDataToStorage();
-            renderTimetable();
-            closeModal();
+            renderSubjectLegend();
+            closeSubjectModal();
         }
 
         function saveCellData(e) {
@@ -759,7 +629,6 @@
             }
 
             const oldColspan = timetableData[dayIdx][slotIdx].colspan || 1;
-
             for (let i = 0; i < oldColspan; i++) {
                 timetableData[dayIdx][slotIdx + i] = { class: '', subject: '', teacher: '', colspan: 1, bg: '' };
             }
@@ -769,7 +638,7 @@
                 subject: subjectName,
                 teacher: teacherNote,
                 colspan: newColspan,
-                bg: colorVal === '#ffffff' ? '' : colorVal
+                bg: colorVal
             };
 
             for (let i = 1; i < newColspan; i++) {
@@ -781,31 +650,66 @@
             closeModal();
         }
 
-        // Reset to initial default schedule
-        function resetToDefault() {
-            if (confirm('Adakah anda pasti mahu menetapkan semula jadual waktu dan senarai subjek ke asal?')) {
+        function clearCell() {
+            const dayIdx = parseInt(document.getElementById('edit-day-idx').value);
+            const slotIdx = parseInt(document.getElementById('edit-slot-idx').value);
+            const oldColspan = timetableData[dayIdx][slotIdx].colspan || 1;
+            
+            for (let i = 0; i < oldColspan; i++) {
+                timetableData[dayIdx][slotIdx + i] = { class: '', subject: '', teacher: '', colspan: 1, bg: '' };
+            }
+
+            saveDataToStorage();
+            renderTimetable();
+            closeModal();
+        }
+
+        function resetToDefaultSchedule() {
+            if (confirm('Adakah anda pasti mahu memulihkan jadual ke susunan asal SK Tambak Jawa 2026?')) {
                 localStorage.removeItem('sk_subjects');
                 localStorage.removeItem('sk_timetable_data');
                 subjectsList = [...defaultSubjects];
                 timetableData = JSON.parse(JSON.stringify(initialSchedule));
-                
-                document.getElementById('input-title').value = "JADUAL WAKTU PERSENDIRIAN 2026";
-                document.getElementById('input-school').value = "SK TAMBAK JAWA, 45800 JERAM, SELANGOR";
-                document.getElementById('input-teacher').value = "EN. MUHAMMAD NAZRUL IMAN BIN MAZLE";
-                
-                updateHeaderInfo();
-                renderSubjectList();
+                renderSubjectLegend();
                 renderTimetable();
             }
         }
 
-        // Download Timetable as High-Res Image
-        function downloadAsImage() {
+        function clearEntireSchedule() {
+            if (confirm('Adakah anda pasti mahu mengosongkan SELURUH jadual waktu?')) {
+                for (let d = 0; d < 5; d++) {
+                    for (let s = 0; s < TOTAL_SLOTS; s++) {
+                        timetableData[d][s] = { class: '', subject: '', teacher: '', colspan: 1, bg: '' };
+                    }
+                }
+                saveDataToStorage();
+                renderTimetable();
+            }
+        }
+
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('school-logo-img').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function resetSchoolLogo() {
+            document.getElementById('school-logo-img').src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'><path d='M50 5 L90 25 L90 75 L50 115 L10 75 L10 25 Z' fill='%23e11d48' stroke='%23fbbf24' stroke-width='4'/><path d='M25 40 L75 40 L75 80 L25 80 Z' fill='%23fbbf24'/><path d='M35 50 L65 50 L50 75 Z' fill='%230284c7'/><circle cx='50' cy='30' r='8' fill='%23facc15'/><text x='50' y='105' font-size='9' font-weight='bold' text-anchor='middle' fill='%23ffffff'>ILMU SULUH KEMAJUAN</text></svg>";
+        }
+
+        // High Resolution PNG Download to Fix Missing Lines Issue Completely
+        function downloadAsHighResPNG() {
             const printElement = document.getElementById('printable-area');
             
             html2canvas(printElement, {
-                scale: 2,
+                scale: 3, // High DPI Scale ensures no crisp border lines are dropped
                 backgroundColor: "#ffffff",
+                useCORS: true,
                 logging: false
             }).then(canvas => {
                 const link = document.createElement('a');
@@ -815,11 +719,9 @@
             });
         }
 
-        // Initialize on Load
         window.onload = function() {
-            renderSubjectList();
+            renderSubjectLegend();
             renderTimetable();
-            updateHeaderInfo();
         };
     </script>
 </body>
