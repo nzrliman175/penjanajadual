@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penjana Jadual Waktu Persendirian 2026 - SK Tambak Jawa</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2canvas for Image Download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        /* Styling for Timetable Print */
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 5mm;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+                padding: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-area {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            .timetable-table {
+                border-collapse: collapse !important;
+                width: 100% !important;
+            }
+            .timetable-table th, .timetable-table td {
+                border: 1.5px solid #000 !important;
+            }
+        }
+
+        /* Timetable grid lines */
+        .timetable-table th, .timetable-table td {
+            border: 1.5px solid #1e293b;
+        }
+
+        .timetable-header-cell {
+            background-color: #ffffff;
+        }
+
+        /* Custom scrollbar for control panel */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="no-print bg-slate-900 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 p-2 rounded-lg text-white">
+                    <i class="fa-solid fa-calendar-days text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">Penjana Jadual Waktu Persendirian</h1>
+                    <p class="text-xs text-slate-400">Versi Khas SK Tambak Jawa 2026</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button onclick="window.print()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition flex items-center space-x-2 shadow">
+                    <i class="fa-solid fa-print"></i>
+                    <span class="hidden sm:inline">Cetak / Simpan PDF</span>
+                </button>
+                <button onclick="downloadAsImage()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition flex items-center space-x-2 shadow">
+                    <i class="fa-solid fa-file-image"></i>
+                    <span class="hidden sm:inline">Muat Turun Gambar</span>
+                </button>
+                <button onclick="resetToDefault()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-sm font-medium transition" title="Set Semula Kebajikan Asal">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex-1 flex flex-col lg:flex-row max-w-7xl w-full mx-auto p-4 gap-6">
+
+        <!-- Sidebar / Control Panel (No Print) -->
+        <aside class="no-print w-full lg:w-80 flex-shrink-0 space-y-4">
+            
+            <!-- Information Card -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <h2 class="font-bold text-slate-900 flex items-center gap-2 border-b pb-2 text-base">
+                    <i class="fa-solid fa-sliders text-indigo-600"></i> Tetapan Maklumat Jadual
+                </h2>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Tajuk Utama</label>
+                    <input type="text" id="input-title" class="w-full text-sm p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="updateHeaderInfo()" value="JADUAL WAKTU PERSENDIRIAN 2026">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Sekolah & Alamat</label>
+                    <input type="text" id="input-school" class="w-full text-sm p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="updateHeaderInfo()" value="SK TAMBAK JAWA, 45800 JERAM, SELANGOR">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Guru</label>
+                    <input type="text" id="input-teacher" class="w-full text-sm p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="updateHeaderInfo()" value="EN. MUHAMMAD NAZRUL IMAN BIN MAZLE">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Logo Sekolah (URL / Muat Naik)</label>
+                    <div class="flex gap-2">
+                        <input type="file" id="logo-upload" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
+                        <button onclick="document.getElementById('logo-upload').click()" class="w-full text-xs py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg border border-slate-300 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-upload"></i> Muat Naik Logo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subject Color Legend / Styling -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-3">
+                <div class="flex justify-between items-center border-b pb-2">
+                    <h2 class="font-bold text-slate-900 flex items-center gap-2 text-base">
+                        <i class="fa-solid fa-palette text-indigo-600"></i> Senarai Subjek & Warna
+                    </h2>
+                    <button onclick="openSubjectModal()" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow">
+                        <i class="fa-solid fa-plus"></i> Subjek
+                    </button>
+                </div>
+                <p class="text-xs text-slate-500">Subjek tersimpan dengan warna pilihan automatik apabila dimasukkan dalam jadual.</p>
+                
+                <!-- Dynamic Subject List Container -->
+                <div id="subject-list-container" class="grid grid-cols-2 gap-2 text-xs max-h-48 overflow-y-auto pr-1">
+                    <!-- Dynamic subjects rendered here -->
+                </div>
+            </div>
+
+            <!-- Helpful Hints -->
+            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-indigo-900 text-xs space-y-2">
+                <p class="font-semibold flex items-center gap-1.5"><i class="fa-solid fa-lightbulb text-amber-500 text-sm"></i> Panduan Penggunaan:</p>
+                <ul class="list-disc list-inside space-y-1 text-indigo-800">
+                    <li>Klik sel untuk **tukar subjek, kelas, atau warna**.</li>
+                    <li>Gunakan **Merge Right** untuk menggabungkan masa subjek 1 jam atau 1.5 jam.</li>
+                    <li>Susunan susun atur dioptimumkan tepat mengikut jadual fizikal asal SK Tambak Jawa 2026.</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Timetable Render View -->
+        <main class="flex-1 flex flex-col items-center">
+            
+            <div id="printable-area" class="print-area bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200 w-full overflow-x-auto">
+                
+                <!-- Header Banner -->
+                <div class="relative flex items-center justify-between border-b-2 border-slate-900 pb-3 mb-3">
+                    
+                    <!-- Left: Logo & School Info -->
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-20 flex-shrink-0 flex items-center justify-center">
+                            <!-- SVG Replica of SK Tambak Jawa Crest / Custom Uploaded Logo -->
+                            <img id="school-logo-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'><path d='M50 5 L90 25 L90 75 L50 115 L10 75 L10 25 Z' fill='%23e11d48' stroke='%23fbbf24' stroke-width='4'/><path d='M25 40 L75 40 L75 80 L25 80 Z' fill='%23fbbf24'/><path d='M35 50 L65 50 L50 75 Z' fill='%230284c7'/><circle cx='50' cy='30' r='8' fill='%23facc15'/><text x='50' y='105' font-size='10' font-weight='bold' text-anchor='middle' fill='%23ffffff'>ILMU SULUH KEMAJUAN</text></svg>" alt="Logo Sekolah" class="max-h-full max-w-full object-contain">
+                        </div>
+                        <div>
+                            <h1 id="display-title" class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 leading-none uppercase">
+                                JADUAL WAKTU PERSENDIRIAN 2026
+                            </h1>
+                            <h2 id="display-school" class="text-2xl sm:text-3xl font-extrabold text-indigo-950 tracking-tight leading-tight uppercase mt-1">
+                                SK TAMBAK JAWA
+                            </h2>
+                            <p id="display-address" class="text-xs font-semibold text-slate-600 uppercase">
+                                SK Tambak Jawa, 45800 Jeram, Selangor
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Right: Teacher Name -->
+                    <div class="text-right flex flex-col justify-end">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">NAMA GURU :</span>
+                        <span id="display-teacher" class="text-sm sm:text-base font-extrabold text-slate-900 uppercase tracking-wide">
+                            EN. MUHAMMAD NAZRUL IMAN BIN MAZLE
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Timetable Main Table -->
+                <div class="overflow-x-auto">
+                    <table id="timetable" class="timetable-table w-full text-center border-collapse">
+                        <!-- Table Header (Time Slots) -->
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-900 text-xs font-bold">
+                                <th class="w-16 py-2 px-1 bg-slate-50">Hari</th>
+                                <!-- Slot 1 -->
+                                <th class="py-1 px-1 min-w-[70px]">
+                                    <span class="text-[10px] text-slate-500 font-semibold block">1</span>
+                                    7:30<br>8:00
+                                </th>
+                                <!-- Slot 2 -->
+                                <th class="py-1 px-1 min-w-[70px]">
+                                    <span class="text-[10px] text-slate-500 font-semibold block">2</span>
+                                    8:00<br>8:30
+                                </th>
+                                <!-- Slot 3 -->
+                                <th class="py-1 px-1 min-w-[70px]">
+                                    <span class="text-[10px] text-slate-500 font-semibold block">3</span>
+                                    8:30<br>9:00
+                                </th>
+                                <!-- Slot 4 -->
+                                <th class="py-1 px-1 min-w-[70px]">
+                                    <span class="text-[10px] text-slate-500 font-semibold block">4</span>
+                                    9:00<br>9:30
+                                </th>
+                                <!-- Slot 5 -->
+                                <th class="py-1 px-1 min-w-[70px]">
+                                    <span class="text-[10px] text-slate-500 font-semibold block">5</span>
+                                    9:30<br>10:00
+                                </th>
+                                <!-- Slot 6 -->
+                                <th class="py-1 px-1 min-w-[70px]">
+                                    <span class="text-[10px] text-slate-500 font-semibold block">6</span>
+                                    10:00<br>10:30
+                                </th>
+                                <!-- Slot 7 -->
+                                <th class="py-1 px-1 min-w-[70px]">
+                                    <span class="text-[10px] text-slate-500 font-semibold block">7</span>
+                                    10:30<br>11:00
+                                </th>
+                                <!-- Slot 8 -->
+                                <th class="py-1 px-1 min-w-[70px]">
+                                    <span class="text-[10px] text-slate-500 font-semibold block">8</span>
+                                    11:00<br>11:30
+                                </th>
+                                <!-- Slot 9 -->
+                                <th class="py-1 px-1 min-w-[70px]">
+                                    <span class="text-[10px] text-slate-500 font-semibold block">9</span>
+                                    11:30<br>12:00
+                                </th>
+                                <!-- Slot 10 -->
+                                <th class="py-1 px-1 min-w-[70px]">
+                                    <span class="text-[10px] text-slate-500 font-semibold block">10</span>
+                                    12:00<br>12:30
+                                </th>
+                                <!-- Slot 11 -->
+                                <th class="py-1 px-1 min-w-[70px]">
+                                    <span class="text-[10px] text-slate-500 font-semibold block">11</span>
+                                    12:30<br>1:00
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="timetable-body" class="divide-y divide-slate-800 text-slate-900 font-bold">
+                            <!-- Dynamic Content Rendered Via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Footer Info -->
+                <div class="flex justify-between items-center text-[10px] font-semibold text-slate-500 mt-2 pt-1 border-t border-slate-200">
+                    <span>JADUAL KELAS</span>
+                    <span>aSc Jadual Waktu</span>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Cell Edit Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 animate-in fade-in zoom-in duration-150">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-indigo-600"></i> Sunting Petak Jadual
+                </h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="edit-form" onsubmit="saveCellData(event)" class="space-y-3">
+                <input type="hidden" id="edit-day-idx">
+                <input type="hidden" id="edit-slot-idx">
+
+                <!-- Quick Subject Selection Dropdown -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Subjek Pantas</label>
+                    <select id="edit-quick-subject" onchange="onQuickSubjectSelect(this.value)" class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-indigo-50/50 font-semibold text-indigo-900">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Subjek / Kod</label>
+                        <input type="text" id="edit-subject" class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="cth: BM, RBT">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Kelas</label>
+                        <input type="text" id="edit-class" class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="cth: 1 JAYA, 3 MAJU">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nota Guru / Catatan Sel</label>
+                    <input type="text" id="edit-teacher-note" class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="cth: EN. NAZRUL">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Span Slot (Tempoh Masa)</label>
+                        <select id="edit-colspan" class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="1">1 Slot (30 Minit)</option>
+                            <option value="2">2 Slot (1 Jam)</option>
+                            <option value="3">3 Slot (1.5 Jam)</option>
+                            <option value="4">4 Slot (2 Jam)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Warna Latar Sel</label>
+                        <div class="flex items-center gap-2">
+                            <input type="color" id="edit-color" class="h-10 w-12 p-1 border border-slate-300 rounded-lg cursor-pointer">
+                            <button type="button" onclick="clearColor()" class="text-xs text-slate-500 underline hover:text-slate-800">Biasa</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex gap-2 justify-end border-t mt-4">
+                    <button type="button" onclick="clearCell()" class="px-4 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 font-semibold rounded-lg text-sm mr-auto transition">
+                        <i class="fa-solid fa-trash-can mr-1"></i> Kosongkan
+                    </button>
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold rounded-lg text-sm transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm shadow transition">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add & Manage Subjects Modal -->
+    <div id="subject-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 animate-in fade-in zoom-in duration-150">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-book text-indigo-600"></i> Urus & Tambah Subjek Baharu
+                </h3>
+                <button onclick="closeSubjectModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="add-subject-form" onsubmit="saveSubject(event)" class="space-y-3">
+                <input type="hidden" id="subject-edit-id" value="">
+                
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Singkatan / Kod Subjek (cth: RBT, MZ, BI)</label>
+                    <input type="text" id="subject-code" required class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none uppercase" placeholder="Masukkan Singkatan">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Penuh Subjek (cth: Reka Bentuk & Teknologi)</label>
+                    <input type="text" id="subject-fullname" required class="w-full text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Masukkan Nama Penuh">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Warna Tema Subjek</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" id="subject-color" value="#3b82f6" class="h-10 w-16 p-1 border border-slate-300 rounded-lg cursor-pointer">
+                        <span class="text-xs text-slate-500">Warna ini akan digunakan secara automatik apabila subjek dipilih.</span>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex gap-2 justify-end border-t mt-4">
+                    <button type="button" onclick="closeSubjectModal()" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold rounded-lg text-sm transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus-circle"></i> Simpan Subjek
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Exact Default Schedule Data based on Image
+        const DAYS = ['Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat'];
+        const SHORT_DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr'];
+        const TOTAL_SLOTS = 11;
+
+        // Default Master Subject List
+        const defaultSubjects = [
+            { id: 'BM', code: 'BM', name: 'Bahasa Melayu', color: '#fef3c7' },   // Light amber
+            { id: 'SEJ', code: 'SEJ', name: 'Sejarah', color: '#e0f2fe' },       // Light sky
+            { id: 'PJ', code: 'PJ', name: 'Pendidikan Jasmani', color: '#d1fae5' }, // Light emerald
+            { id: 'PK', code: 'PK', name: 'Pendidikan Kesihatan', color: '#d1fae5' },
+            { id: 'P', code: 'P', name: 'Perhimpunan', color: '#f3e8ff' }        // Light purple
+        ];
+
+        // Master Subject List (Loaded from local storage or defaults)
+        let subjectsList = JSON.parse(localStorage.getItem('sk_subjects')) || defaultSubjects;
+
+        // Default timetable matrix preloaded with SK Tambak Jawa image data
+        const initialSchedule = [
+            // Isnin (Mo)
+            [
+                { class: '', subject: 'P', teacher: '', colspan: 1, bg: '#f3e8ff' },
+                { class: '1 JAYA', subject: 'BM', teacher: '', colspan: 2, bg: '#fef3c7' },
+                null,
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '5 MAJU', subject: 'SEJ', teacher: 'EN. NAZRUL', colspan: 2, bg: '#e0f2fe' },
+                null,
+                { class: '2 MAJU', subject: 'BM', teacher: 'EN. NAZRUL', colspan: 2, bg: '#fef3c7' },
+                null
+            ],
+            // Selasa (Tu)
+            [
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '6 JAYA', subject: 'PJ', teacher: '', colspan: 1, bg: '#d1fae5' },
+                { class: '6 MAJU', subject: 'SEJ', teacher: 'EN. NAZRUL', colspan: 2, bg: '#e0f2fe' },
+                null,
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '2 MAJU', subject: 'BM', teacher: '', colspan: 2, bg: '#fef3c7' },
+                null,
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' }
+            ],
+            // Rabu (We)
+            [
+                { class: '6 JAYA', subject: 'PJ', teacher: '', colspan: 1, bg: '#d1fae5' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '1 JAYA', subject: 'BM', teacher: 'EN. NAZRUL', colspan: 2, bg: '#fef3c7' },
+                null,
+                { class: '2 MAJU', subject: 'BM', teacher: 'EN. NAZRUL', colspan: 2, bg: '#fef3c7' },
+                null,
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' }
+            ],
+            // Khamis (Th)
+            [
+                { class: '1 JAYA', subject: 'BM', teacher: '', colspan: 2, bg: '#fef3c7' },
+                null,
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' }
+            ],
+            // Jumaat (Fr)
+            [
+                { class: '6 JAYA', subject: 'PK', teacher: '', colspan: 1, bg: '#d1fae5' },
+                { class: '1 JAYA', subject: 'BM', teacher: 'EN. NAZRUL', colspan: 2, bg: '#fef3c7' },
+                null,
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '2 MAJU', subject: 'BM', teacher: '', colspan: 2, bg: '#fef3c7' },
+                null,
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' },
+                { class: '', subject: '', teacher: '', colspan: 1, bg: '' }
+            ]
+        ];
+
+        // Active State Schedule (Loaded from local storage or defaults)
+        let timetableData = JSON.parse(localStorage.getItem('sk_timetable_data')) || JSON.parse(JSON.stringify(initialSchedule));
+
+        // Save State to LocalStorage
+        function saveDataToStorage() {
+            localStorage.setItem('sk_subjects', JSON.stringify(subjectsList));
+            localStorage.setItem('sk_timetable_data', JSON.stringify(timetableData));
+        }
+
+        // Render Subject List Legend Panel
+        function renderSubjectList() {
+            const container = document.getElementById('subject-list-container');
+            container.innerHTML = '';
+
+            subjectsList.forEach((sub) => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between p-2 rounded border text-xs font-semibold shadow-sm transition hover:shadow";
+                item.style.backgroundColor = sub.color;
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        <span class="w-2.5 h-2.5 rounded-full border border-slate-400 flex-shrink-0" style="background-color: ${sub.color}"></span>
+                        <span class="truncate text-slate-900" title="${sub.name}">${sub.code}</span>
+                    </div>
+                    <button onclick="deleteSubject('${sub.id}')" class="text-slate-400 hover:text-rose-600 p-0.5" title="Padam Subjek">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Open & Close Subject Manager Modal
+        function openSubjectModal() {
+            document.getElementById('subject-code').value = '';
+            document.getElementById('subject-fullname').value = '';
+            document.getElementById('subject-color').value = '#3b82f6';
+            document.getElementById('subject-modal').classList.remove('hidden');
+        }
+
+        function closeSubjectModal() {
+            document.getElementById('subject-modal').classList.add('hidden');
+        }
+
+        // Save New Custom Subject
+        function saveSubject(e) {
+            e.preventDefault();
+            const code = document.getElementById('subject-code').value.trim().toUpperCase();
+            const fullname = document.getElementById('subject-fullname').value.trim();
+            const color = document.getElementById('subject-color').value;
+
+            if (!code) return;
+
+            // Check if exists
+            const existingIndex = subjectsList.findIndex(s => s.code === code);
+            if (existingIndex >= 0) {
+                subjectsList[existingIndex] = { id: code, code, name: fullname, color };
+            } else {
+                subjectsList.push({ id: code, code, name: fullname, color });
+            }
+
+            saveDataToStorage();
+            renderSubjectList();
+            closeSubjectModal();
+        }
+
+        // Delete Subject
+        function deleteSubject(subjectId) {
+            if (confirm(`Adakah anda pasti mahu memadam subjek ini?`)) {
+                subjectsList = subjectsList.filter(s => s.id !== subjectId);
+                saveDataToStorage();
+                renderSubjectList();
+            }
+        }
+
+        // Populate Subject Quick Dropdown in Cell Edit Modal
+        function populateQuickSubjectDropdown(selectedCode) {
+            const select = document.getElementById('edit-quick-subject');
+            select.innerHTML = '<option value="">-- Pilih Daripada Senarai Subjek --</option>';
+
+            subjectsList.forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub.code;
+                opt.innerText = `${sub.code} - ${sub.name}`;
+                if (sub.code === selectedCode) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+        }
+
+        // Auto Fill Subject Code and Color when Quick Dropdown changes
+        function onQuickSubjectSelect(code) {
+            if (!code) return;
+            const sub = subjectsList.find(s => s.code === code);
+            if (sub) {
+                document.getElementById('edit-subject').value = sub.code;
+                document.getElementById('edit-color').value = sub.color;
+            }
+        }
+
+        // Render Table Function
+        function renderTimetable() {
+            const tbody = document.getElementById('timetable-body');
+            tbody.innerHTML = '';
+
+            SHORT_DAYS.forEach((dayLabel, dayIdx) => {
+                const tr = document.createElement('tr');
+                tr.className = "h-16";
+
+                // Day Label Header Cell
+                const tdDay = document.createElement('td');
+                tdDay.className = "bg-slate-100 text-base font-extrabold text-slate-800 tracking-wide";
+                tdDay.innerText = dayLabel;
+                tr.appendChild(tdDay);
+
+                let slotIdx = 0;
+                while (slotIdx < TOTAL_SLOTS) {
+                    const cellData = timetableData[dayIdx][slotIdx];
+
+                    if (cellData === null) {
+                        slotIdx++;
+                        continue;
+                    }
+
+                    const td = document.createElement('td');
+                    td.colSpan = cellData.colspan || 1;
+                    td.className = "p-1 relative cursor-pointer hover:bg-indigo-50/50 transition-colors select-none group align-middle";
+
+                    if (cellData.bg) {
+                        td.style.backgroundColor = cellData.bg;
+                    }
+
+                    // Content Container inside Cell
+                    const wrapper = document.createElement('div');
+                    wrapper.className = "flex flex-col justify-between h-full min-h-[56px] w-full text-center px-1 py-0.5";
+
+                    // Top: Class Name
+                    const classDiv = document.createElement('div');
+                    classDiv.className = "text-[11px] font-semibold text-slate-700 tracking-tight text-left leading-none";
+                    classDiv.innerText = cellData.class || '';
+
+                    // Middle: Subject (Large Bold Text)
+                    const subjectDiv = document.createElement('div');
+                    subjectDiv.className = "text-xl sm:text-2xl font-black text-slate-900 tracking-normal my-auto leading-none";
+                    subjectDiv.innerText = cellData.subject || '';
+
+                    // Bottom: Teacher Note
+                    const teacherDiv = document.createElement('div');
+                    teacherDiv.className = "text-[9px] font-bold text-slate-600 tracking-tighter text-right uppercase leading-none";
+                    teacherDiv.innerText = cellData.teacher || '';
+
+                    wrapper.appendChild(classDiv);
+                    wrapper.appendChild(subjectDiv);
+                    wrapper.appendChild(teacherDiv);
+                    td.appendChild(wrapper);
+
+                    // Add click listener to edit cell
+                    const currentDay = dayIdx;
+                    const currentSlot = slotIdx;
+                    td.onclick = () => openModal(currentDay, currentSlot);
+
+                    tr.appendChild(td);
+                    slotIdx += (cellData.colspan || 1);
+                }
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Header Editing Sync
+        function updateHeaderInfo() {
+            const titleVal = document.getElementById('input-title').value;
+            const schoolVal = document.getElementById('input-school').value;
+            const teacherVal = document.getElementById('input-teacher').value;
+
+            document.getElementById('display-title').innerText = titleVal || 'JADUAL WAKTU PERSENDIRIAN 2026';
+            
+            if (schoolVal.includes(',')) {
+                const parts = schoolVal.split(',');
+                document.getElementById('display-school').innerText = parts[0].trim();
+                document.getElementById('display-address').innerText = schoolVal.trim();
+            } else {
+                document.getElementById('display-school').innerText = schoolVal || 'SK TAMBAK JAWA';
+                document.getElementById('display-address').innerText = schoolVal;
+            }
+
+            document.getElementById('display-teacher').innerText = teacherVal || 'EN. MUHAMMAD NAZRUL IMAN BIN MAZLE';
+        }
+
+        // Logo Upload Handler
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('school-logo-img').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Modal Functions
+        function openModal(dayIdx, slotIdx) {
+            const cell = timetableData[dayIdx][slotIdx];
+            if (!cell) return;
+
+            document.getElementById('edit-day-idx').value = dayIdx;
+            document.getElementById('edit-slot-idx').value = slotIdx;
+            document.getElementById('edit-class').value = cell.class || '';
+            document.getElementById('edit-subject').value = cell.subject || '';
+            document.getElementById('edit-teacher-note').value = cell.teacher || '';
+            document.getElementById('edit-colspan').value = cell.colspan || 1;
+            document.getElementById('edit-color').value = cell.bg || '#ffffff';
+
+            populateQuickSubjectDropdown(cell.subject || '');
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        function clearColor() {
+            document.getElementById('edit-color').value = '#ffffff';
+        }
+
+        function clearCell() {
+            const dayIdx = parseInt(document.getElementById('edit-day-idx').value);
+            const slotIdx = parseInt(document.getElementById('edit-slot-idx').value);
+
+            const oldColspan = timetableData[dayIdx][slotIdx].colspan || 1;
+            
+            for (let i = 0; i < oldColspan; i++) {
+                timetableData[dayIdx][slotIdx + i] = { class: '', subject: '', teacher: '', colspan: 1, bg: '' };
+            }
+
+            saveDataToStorage();
+            renderTimetable();
+            closeModal();
+        }
+
+        function saveCellData(e) {
+            e.preventDefault();
+            const dayIdx = parseInt(document.getElementById('edit-day-idx').value);
+            const slotIdx = parseInt(document.getElementById('edit-slot-idx').value);
+            const className = document.getElementById('edit-class').value.trim();
+            const subjectName = document.getElementById('edit-subject').value.trim();
+            const teacherNote = document.getElementById('edit-teacher-note').value.trim();
+            const newColspan = parseInt(document.getElementById('edit-colspan').value);
+            const colorVal = document.getElementById('edit-color').value;
+
+            if (slotIdx + newColspan > TOTAL_SLOTS) {
+                alert('Gabungan slot ini melebihi had waktu jadual!');
+                return;
+            }
+
+            const oldColspan = timetableData[dayIdx][slotIdx].colspan || 1;
+
+            for (let i = 0; i < oldColspan; i++) {
+                timetableData[dayIdx][slotIdx + i] = { class: '', subject: '', teacher: '', colspan: 1, bg: '' };
+            }
+
+            timetableData[dayIdx][slotIdx] = {
+                class: className,
+                subject: subjectName,
+                teacher: teacherNote,
+                colspan: newColspan,
+                bg: colorVal === '#ffffff' ? '' : colorVal
+            };
+
+            for (let i = 1; i < newColspan; i++) {
+                timetableData[dayIdx][slotIdx + i] = null;
+            }
+
+            saveDataToStorage();
+            renderTimetable();
+            closeModal();
+        }
+
+        // Reset to initial default schedule
+        function resetToDefault() {
+            if (confirm('Adakah anda pasti mahu menetapkan semula jadual waktu dan senarai subjek ke asal?')) {
+                localStorage.removeItem('sk_subjects');
+                localStorage.removeItem('sk_timetable_data');
+                subjectsList = [...defaultSubjects];
+                timetableData = JSON.parse(JSON.stringify(initialSchedule));
+                
+                document.getElementById('input-title').value = "JADUAL WAKTU PERSENDIRIAN 2026";
+                document.getElementById('input-school').value = "SK TAMBAK JAWA, 45800 JERAM, SELANGOR";
+                document.getElementById('input-teacher').value = "EN. MUHAMMAD NAZRUL IMAN BIN MAZLE";
+                
+                updateHeaderInfo();
+                renderSubjectList();
+                renderTimetable();
+            }
+        }
+
+        // Download Timetable as High-Res Image
+        function downloadAsImage() {
+            const printElement = document.getElementById('printable-area');
+            
+            html2canvas(printElement, {
+                scale: 2,
+                backgroundColor: "#ffffff",
+                logging: false
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'Jadual_Waktu_SK_Tambak_Jawa_2026.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
+        // Initialize on Load
+        window.onload = function() {
+            renderSubjectList();
+            renderTimetable();
+            updateHeaderInfo();
+        };
+    </script>
+</body>
+</html>
